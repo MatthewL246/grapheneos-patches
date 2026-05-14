@@ -49,19 +49,26 @@ function update_source_code {
 }
 
 function update_patches {
-    # Needed so the patches apply cleanly
-    repo forall --jobs "$(nproc)" --command git reset --hard >/dev/null
+    # This previously reset all of the repos and then applied all patches indiscriminately, but that method invalidated the incremental build cache!
 
     function apply_patch {
         patch_file="$(realpath --no-symlinks "$0")"
-        repo_path="$(dirname "$(realpath --no-symlinks --relative-to ../patches "$patch_file")")"
+        # https://stackoverflow.com/a/28523143
+        relative_patch_path="$(realpath --no-symlinks --relative-to ../patches "$patch_file")"
 
-        echo "Applying patch $patch_file"
-        cd "$repo_path"
-        git apply "$patch_file"
+        cd "$(dirname "$relative_patch_path")"
+
+        # https://stackoverflow.com/a/66755317
+        if git apply --reverse --check "$patch_file" >/dev/null 2>&1; then
+            echo "Patch $relative_patch_path already applied"
+        else
+            echo "Applying patch $relative_patch_path"
+            git apply "$patch_file"
+        fi
     }
 
     export -f apply_patch
+    # https://stackoverflow.com/a/4321522
     find ../patches -type f -iname "*.patch" -exec bash -c 'apply_patch "$0"' {} \;
     export -nf apply_patch
 }
