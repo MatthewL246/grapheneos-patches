@@ -48,6 +48,24 @@ function update_source_code {
     fi
 }
 
+function update_patches {
+    # Needed so the patches apply cleanly
+    repo forall --jobs "$(nproc)" --command git reset --hard >/dev/null
+
+    function apply_patch {
+        patch_file="$(realpath --no-symlinks "$0")"
+        repo_path="$(dirname "$(realpath --no-symlinks --relative-to ../patches "$patch_file")")"
+
+        echo "Applying patch $patch_file"
+        cd "$repo_path"
+        git apply "$patch_file"
+    }
+
+    export -f apply_patch
+    find ../patches -type f -iname "*.patch" -exec bash -c 'apply_patch "$0"' {} \;
+    export -nf apply_patch
+}
+
 function main {
     base_dir="$(dirname "$(realpath "$0")")"
     cd "$base_dir"
@@ -84,6 +102,8 @@ function main {
     if [[ -n "$update_version" ]]; then
         update_source_code "$update_version"
     fi
+
+    update_patches
 }
 
 main "$@"
