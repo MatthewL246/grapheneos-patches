@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+emulator_target="sdk_phone64_x86_64-cur-user"
+phone_target="blazer-cur-user"
+
 function check_build_dependencies {
     for dependency in repo python3 git gpg ssh-keygen diff fc-list hostname openssl rsync unzip zip node yarn; do
         command -v "$dependency" >/dev/null || (echo "Missing dependency: $dependency" && exit 1)
@@ -73,6 +76,33 @@ function update_patches {
     export -nf apply_patch
 }
 
+function run_build {
+    target="$1"
+
+    # Android build system scripts reference undefined variables
+    set +u
+    source ./build/envsetup.sh
+    set -u
+
+    if [[ "$target" == "$phone_target" ]]; then
+        yarn --cwd ./vendor/adevtool install --immutable --ignore-scripts
+        ./vendor/adevtool/bin/run generate-all --devices blazer
+    fi
+
+    set +u
+    lunch "$target"
+    set -u
+
+    if [[ "$target" == "$emulator_target" ]]; then
+        m -j "$(nproc)"
+    elif [[ "$target" == "$phone_target" ]]; then
+        m -j "$(nproc)" vendorbootimage vendorkernelbootimage target-files-package
+    else
+        echo "Error: not sure what build command to run"
+        exit 1
+    fi
+}
+
 function main {
     base_dir="$(dirname "$(realpath "$0")")"
     cd "$base_dir"
@@ -90,9 +120,9 @@ function main {
     update_version=""
 
     if [[ "$1" == phone ]]; then
-        target="blazer-cur-user"
+        target="$phone_target"
     elif [[ "$1" == emulator ]]; then
-        target="sdk_phone64_x86_64-cur-user"
+        target="$emulator_target"
     else
         echo "Invalid target provided."
         exit 1
@@ -111,6 +141,8 @@ function main {
     fi
 
     update_patches
+
+    run_build "$target"
 }
 
 main "$@"
