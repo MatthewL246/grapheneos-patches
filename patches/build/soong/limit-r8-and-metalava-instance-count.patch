@@ -1,0 +1,45 @@
+diff --git a/scripts/jar-wrapper.sh b/scripts/jar-wrapper.sh
+index b46804157..f2832ddf4 100644
+--- a/scripts/jar-wrapper.sh
++++ b/scripts/jar-wrapper.sh
+@@ -55,4 +55,40 @@ while expr "x$1" : 'x-J' >/dev/null; do
+     shift
+ done
+ 
++# Prevent more than n instances of certain memory-hungry Java programs from running at a time because running too many will result in lots of swapping and potentially an OOM
++if [ "$jarfile" = "r8.jar" -o "$jarfile" = "metalava.jar" ]; then
++    set -euo pipefail
++
++    [ "$jarfile" = "r8.jar" ] && max_instances=8 || max_instances=16
++    lock_dir="/tmp/android-build-system-jar-lock/$jarfile"
++    my_pid=$$
++
++    mkdir -p "$lock_dir"
++
++    while true; do
++        # Avoid the need for cleanup (which wouldn't run if this script is killed) by handling stale lockfiles here
++        for file in "$lock_dir"/*; do
++            # lock_dir might be empty, resulting in the current file being a literal "*"
++            if [ ! -f "$file" ]; then
++                continue
++            fi
++
++            pid="$(basename "$file")"
++            if ! ps -p "$pid" >/dev/null 2>&1; then
++                # Just ignore the race conditions - worst case, too many instances end up running at once
++                rm "$file" || true
++            fi
++        done
++
++        current=$(ls "$lock_dir" | wc -l)
++
++        if [ "$current" -lt "$max_instances" ]; then
++            touch "$lock_dir/$my_pid"
++            break
++        else
++            sleep 1
++        fi
++    done
++fi
++
+ exec java "${javaOpts[@]}" -jar ${jardir}/${jarfile} "$@"
