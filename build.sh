@@ -27,12 +27,8 @@ function update_source_code {
     repo init --manifest-url https://github.com/GrapheneOS/platform_manifest.git --manifest-branch "refs/tags/$update_version"
 
     # If they change their keys for some reason, manual intervention should be necessary
-    if [[ ! -f ./allowed_signers ]]; then
-        curl https://grapheneos.org/allowed_signers --remote-name
-    fi
-
     cd .repo/manifests
-    git config gpg.ssh.allowedSignersFile ../../allowed_signers
+    git config gpg.ssh.allowedSignersFile ../../../allowed_signers
     git verify-tag "$(git describe)"
     cd ../..
 
