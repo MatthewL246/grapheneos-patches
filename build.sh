@@ -10,16 +10,12 @@ function check_build_dependencies {
     done
 
     # freetype2 dependency doesn't have an executable, but it's probably installed considering how many things depend on it
-}
 
-function enter_source_code_dir {
     if [[ ! -d ./grapheneos ]]; then
-        echo "Error: grapheneos source code directory not found. Copy it to the root of this repo."
-        echo "Or, create the grapheneos directory now if you *really* want to re-download >100GB of code."
+        echo "Error: $(pwd)/grapheneos source code directory not found. Copy or symlink it in the root of this repo."
+        echo "Or, create the $(pwd)/grapheneos directory now if you *really* want to re-download >100GB of code."
         exit 1
     fi
-
-    cd ./grapheneos
 }
 
 function update_source_code {
@@ -37,7 +33,7 @@ function update_source_code {
     git verify-tag "$(git describe)"
     cd ../..
 
-    # More than 16 jobs results in rate limit errors
+    # More than about 16 jobs results in rate limit errors
     # Force options may result in loss of data, but all of that data should be saved as patches
     repo sync --jobs 16 --force-sync --force-checkout --force-remove-dirty --prune --auto-gc
 
@@ -60,7 +56,7 @@ function main {
         echo "Usage: $0 <target> [version]"
         echo
         echo "<target> must be \"phone\" or \"emulator\"."
-        echo "[version] may be the latest release tag name from https://grapheneos.org/releases#blazer. If specified, the source code will be updated to that version. Otherwise, no update will be performed."
+        echo "[version] may be the latest release tag name from https://grapheneos.org/releases#blazer. If specified, the source code will be updated to that version, which will reset all local changes. Otherwise, no update will be performed."
 
         [[ $# -lt 1 ]] && exit 1 || exit 0
     fi
@@ -82,7 +78,8 @@ function main {
     fi
 
     check_build_dependencies
-    enter_source_code_dir
+
+    cd ./grapheneos
 
     if [[ -n "$update_version" ]]; then
         update_source_code "$update_version"
