@@ -5,9 +5,12 @@
 set -euo pipefail
 
 emulator_target="sdk_phone64_x86_64-cur-user"
-phone_target="blazer-cur-user"
+phone_codename="blazer"
+phone_target="$phone_codename-cur-user"
 
 function check_build_dependencies {
+    target="$1"
+
     for dependency in repo python3 git gpg ssh-keygen diff fc-list hostname openssl rsync unzip zip node yarn; do
         command -v "$dependency" >/dev/null || (echo "Missing dependency: $dependency" && exit 1)
     done
@@ -17,6 +20,11 @@ function check_build_dependencies {
     if [[ ! -d ./grapheneos ]]; then
         echo "Error: $(pwd)/grapheneos source code directory not found. Copy or symlink it in the root of this repo."
         echo "Or, create the $(pwd)/grapheneos directory now if you *really* want to re-download >100GB of code."
+        exit 1
+    fi
+
+    if [[ "$target" == "$phone_target" && (! -d "./grapheneos/keys/$phone_codename" || "$(find "./grapheneos/keys/$phone_codename" -type f | wc -l)" -ne 22) ]]; then
+        echo "Error: Release signing keys not found. Generate them by following https://grapheneos.org/build#generating-release-signing-keys"
         exit 1
     fi
 }
@@ -80,9 +88,11 @@ function run_build {
     source ./build/envsetup.sh
     set -u
 
-    if [[ "$target" == "$phone_target" ]]; then
+    # Directory name will need to change when new releases update the vendor firmware version
+    if [[ "$target" == "$phone_target" && ! -d "./vendor/adevtool/dl/$phone_codename-cp1a.260505.005" ]]; then
         yarn --cwd ./vendor/adevtool install --immutable --ignore-scripts
-        ./vendor/adevtool/bin/run generate-all --devices blazer
+        # This invalidates a few parts of the incremental build cache (about 3-4 minutes to rebuild)
+        ./vendor/adevtool/bin/run generate-all --devices "$phone_codename"
     fi
 
     set +u
@@ -91,8 +101,24 @@ function run_build {
 
     if [[ "$target" == "$emulator_target" ]]; then
         m -j "$(nproc)"
+        emulator
     elif [[ "$target" == "$phone_target" ]]; then
-        m -j "$(nproc)" vendorbootimage vendorkernelbootimage target-files-package
+        m -j "$(nproc)" vendorbootimage vendorkernelbootimage target-files-package otatools-package
+
+        read -r -p "Build completed, continue generating a signed release? (y/N) " response
+        if [[ "$response" == y || "$response" == Y ]]; then
+
+            # Max I saw was about 13GB, but increase it a little to be safe
+            fallocate --length 15G /tmp/free-space-test || read -r -p "Error: could not create a 15GB test file in /tmp. Generating the release will fail. Fix the problem and then continue." _
+            rm -f /tmp/free-space-test
+
+            ./script/finalize.sh
+            # Variables are set by envsetup.sh
+            ./script/generate-release.sh "$TARGET_PRODUCT" "$BUILD_NUMBER"
+
+            echo
+            echo "Finished! Files are in $(realpath "./releases/$BUILD_NUMBER/release-$TARGET_PRODUCT-$BUILD_NUMBER")"
+        fi
     else
         echo "Error: not sure what build command to run"
         exit 1
@@ -107,7 +133,7 @@ function main {
         echo "Usage: $0 <target> [version]"
         echo
         echo "<target> must be \"phone\" or \"emulator\"."
-        echo "[version] may be the latest release tag name from https://grapheneos.org/releases#blazer. If specified, the source code will be updated to that version, which will reset all local changes. Otherwise, no update will be performed."
+        echo "[version] may be the latest release tag name from https://grapheneos.org/releases#$phone_codename. If specified, the source code will be updated to that version, which will reset all local changes. Otherwise, no update will be performed."
 
         [[ $# -lt 1 ]] && exit 1 || exit 0
     fi
@@ -128,7 +154,7 @@ function main {
         update_version="$2"
     fi
 
-    check_build_dependencies
+    check_build_dependencies "$target"
 
     cd ./grapheneos
 
