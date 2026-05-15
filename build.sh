@@ -89,7 +89,7 @@ function run_build {
     set -u
 
     # Directory name will need to change when new releases update the vendor firmware version
-    if [[ "$target" == "$phone_target" && ! -d "./vendor/adevtool/dl/$phone_codename-cp1a.260505.005" ]]; then
+    if [[ "$target" == "$phone_target" && ! -d "./vendor/adevtool/dl/unpacked/$phone_codename-CP1A.260505.005" ]]; then
         yarn --cwd ./vendor/adevtool install --immutable --ignore-scripts
         # This invalidates a few parts of the incremental build cache (about 3-4 minutes to rebuild)
         ./vendor/adevtool/bin/run generate-all --devices "$phone_codename"
