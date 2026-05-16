@@ -1,0 +1,13 @@
+diff --git a/build/soong/policy.go b/build/soong/policy.go
+index 78f99921f..ee5889192 100644
+--- a/build/soong/policy.go
++++ b/build/soong/policy.go
+@@ -544,7 +544,7 @@ func (c *policyBinary) GenerateAndroidBuildActions(ctx android.ModuleContext) {
+ 			Input(bin).
+ 			Text("permissive")
+ 		// Filter-out domains listed in permissive_domains_on_user_builds
+-		allowedDomains := c.properties.Permissive_domains_on_user_builds
++		allowedDomains := append(c.properties.Permissive_domains_on_user_builds, "su")
+ 		if len(allowedDomains) != 0 {
+ 			cmd.Text("| { grep -Fxv")
+ 			for _, d := range allowedDomains {

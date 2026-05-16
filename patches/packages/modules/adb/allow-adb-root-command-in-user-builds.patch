@@ -1,0 +1,26 @@
+diff --git a/daemon/restart_service.cpp b/daemon/restart_service.cpp
+index 16d26279..97e13235 100644
+--- a/daemon/restart_service.cpp
++++ b/daemon/restart_service.cpp
+@@ -33,7 +33,7 @@ void restart_root_service(unique_fd fd) {
+         WriteFdExactly(fd.get(), "adbd is already running as root\n");
+         return;
+     }
+-    if (!__android_log_is_debuggable()) {
++    if (false) {
+         WriteFdExactly(fd.get(), "adbd cannot run as root in production builds\n");
+         return;
+     }
+diff --git a/sockets.cpp b/sockets.cpp
+index acb3de1c..5b07c664 100644
+--- a/sockets.cpp
++++ b/sockets.cpp
+@@ -473,7 +473,7 @@ asocket* create_local_service_socket(std::string_view name, atransport* transpor
+     VLOG(SOCKETS) << "LS(" << s->id << "): bound to '" << name << "' via " << fd_value;
+ 
+ #if !ADB_HOST
+-    if ((name.starts_with("root:") && getuid() != 0 && __android_log_is_debuggable()) ||
++    if ((name.starts_with("root:") && getuid() != 0) ||
+         (name.starts_with("unroot:") && getuid() == 0) || name.starts_with("usb:") ||
+         name.starts_with("tcpip:")) {
+         D("LS(%d): enabling exit_on_close", s->id);

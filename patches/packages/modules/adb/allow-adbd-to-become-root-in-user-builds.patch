@@ -1,0 +1,22 @@
+diff --git a/daemon/main.cpp b/daemon/main.cpp
+index 3d3f3024..933970a4 100644
+--- a/daemon/main.cpp
++++ b/daemon/main.cpp
+@@ -84,7 +84,7 @@ static bool should_drop_privileges() {
+     std::string prop = android::base::GetProperty("service.adb.root", "");
+     bool adb_root = (prop == "1");
+     bool adb_unroot = (prop == "0");
+-    if (ro_debuggable && adb_root) {
++    if (adb_root) {
+         drop = false;
+     }
+     // ... and "adb unroot" lets you explicitly drop privileges.
+@@ -182,6 +182,8 @@ static void drop_privileges() {
+             }
+         }
+     }
++    // This isn't necessary, but it seems reasonable to stay on the safe side and have adbd not run as root if it gets restarted
++    android::base::SetProperty("service.adb.root", "");
+ }
+ #endif
+ 

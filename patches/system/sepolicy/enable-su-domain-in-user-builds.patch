@@ -1,0 +1,24 @@
+diff --git a/private/su.te b/private/su.te
+index fae9b987e..467aa0220 100644
+--- a/private/su.te
++++ b/private/su.te
+@@ -1,10 +1,7 @@
+-userdebug_or_eng(`
+   typeattribute su coredomain;
+ 
+-  domain_auto_trans(shell, su_exec, su)
+   # Allow dumpstate to call su on userdebug / eng builds to collect
+   # additional information.
+-  domain_auto_trans(dumpstate, su_exec, su)
+ 
+   # Make sure that dumpstate runs the same from the "su" domain as
+   # from the "init" domain.
+@@ -134,4 +131,7 @@ userdebug_or_eng(`
+   typeattribute su hal_wifi_client;
+   typeattribute su hal_wifi_hostapd_client;
+   typeattribute su hal_wifi_supplicant_client;
+-')
++
++# Nothing besides adbd should be able to transition to su in user builds
++neverallow { domain -adbd userdebug_or_eng(`-domain') } su:process { transition dyntransition };
++neverallow { domain -init userdebug_or_eng(`-domain') } adbd:process { transition dyntransition };

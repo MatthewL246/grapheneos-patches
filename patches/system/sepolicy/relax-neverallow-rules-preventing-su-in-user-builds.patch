@@ -1,0 +1,56 @@
+diff --git a/private/adbd.te b/private/adbd.te
+index a482f1faa..f135b3fe4 100644
+--- a/private/adbd.te
++++ b/private/adbd.te
+@@ -228,7 +228,7 @@ allow adbd shell_test_data_file:lnk_file create_file_perms;
+ neverallow adbd { domain -crash_dump -shell -adbd_tradeinmode }:process transition;
+ neverallow adbd {
+     domain
+-    userdebug_or_eng(`-su')
++    -su
+     recovery_only(`-shell')
+     -adbd_tradeinmode
+ }:process dyntransition;
+diff --git a/private/app.te b/private/app.te
+index b5c53655b..b13c8f01c 100644
+--- a/private/app.te
++++ b/private/app.te
+@@ -813,7 +813,7 @@ neverallow appdomain system_server:udp_socket {
+ # Exception for renderscript binaries (/system/bin/bcc, /system/bin/ld.mc)
+ # to allow renderscript to create privileged executable files.
+ # Exception for virtualizationmanager to allow running VMs as child processes.
+-neverallow { appdomain -shell userdebug_or_eng(`-su') }
++neverallow { appdomain -shell -su }
+     { domain -appdomain -crash_dump -rs -virtualizationmanager }:process { transition };
+ neverallow { appdomain -shell userdebug_or_eng(`-su') }
+     { domain -appdomain }:process { dyntransition };
+diff --git a/private/domain.te b/private/domain.te
+index 77097d26b..0433222b5 100644
+--- a/private/domain.te
++++ b/private/domain.te
+@@ -967,7 +967,7 @@ full_treble_only(`
+   neverallow {
+     coredomain
+     -shell
+-    userdebug_or_eng(`-su')
++    -su
+     -ueventd # uevent is granted create for this device, but we still neverallow I/O below
+   } vndbinder_device:chr_file rw_file_perms;
+ ')
+@@ -985,7 +985,7 @@ full_treble_only(`
+   neverallow {
+     coredomain
+     -shell
+-    userdebug_or_eng(`-su')
++    -su
+   } vndservicemanager:binder *;
+ ')
+ 
+@@ -1461,6 +1461,7 @@ neverallow {
+   -app_zygote
+   -webview_zygote
+   -zygote
++  -adbd
+ } {
+   appdomain -shell -simpleperf userdebug_or_eng(`-su') -tradeinmode -isolated_app
+ }:process { transition dyntransition };

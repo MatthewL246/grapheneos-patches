@@ -1,0 +1,14 @@
+diff --git a/private/adbd.te b/private/adbd.te
+index df7d4b386..f135b3fe4 100644
+--- a/private/adbd.te
++++ b/private/adbd.te
+@@ -15,9 +15,7 @@ allow adbd self:vsock_socket { create_socket_perms_no_ioctl listen accept };
+ allow adbd self:process setcurrent;
+ allow adbd adbd_tradeinmode:process dyntransition;
+ 
+-userdebug_or_eng(`
+   allow adbd su:process dyntransition;
+-')
+ 
+ # When 'adb shell' is executed in recovery mode, adbd explicitly
+ # switches into shell domain using setcon() because the shell executable

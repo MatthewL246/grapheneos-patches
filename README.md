@@ -5,10 +5,11 @@ This repository contains build scripts and patches I use for my personal [Graphe
 ## Goals
 
 - Build GrapheneOS from source and sign it with keys that I control. This allows me to make changes to the OS without unlocking the bootloader or wiping data.
+- Add support for ADB-only root, which allows the `adb root` command in production (user) builds but does not provide any sort of app-accessible root or `su` binary. My understanding (based on comments by the developers) is that this is the only rooting method that does not break the OS's security model.
 
 ### Future Goals
 
-- Add support for ADB-only root, which allows the `adb root` command on production builds but does not provide any sort of app-accessible root or `su` binary. My understanding (based on comments by the developers) is that this is the only rooting method that does not break the OS's security model.
+- Add some way to enable or disable `adb root` at runtime.
 - Add support for OTA updates from a custom server.
 - Potentially add more patches.
 

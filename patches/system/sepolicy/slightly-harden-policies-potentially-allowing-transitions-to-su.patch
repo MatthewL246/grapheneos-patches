@@ -1,0 +1,26 @@
+diff --git a/private/runas.te b/private/runas.te
+index 1d9aed01a..471c5be52 100644
+--- a/private/runas.te
++++ b/private/runas.te
+@@ -30,7 +30,7 @@ allow runas self:global_capability_class_set { setuid setgid };
+ # run-as switches to the app security context.
+ selinux_check_context(runas) # validate context
+ allow runas self:process setcurrent;
+-allow runas non_system_app_set:process dyntransition; # setcon
++allow runas { non_system_app_set -su }:process dyntransition; # setcon
+ 
+ # runas/libselinux needs access to seapp_contexts_file to
+ # determine which domain to transition to.
+diff --git a/private/zygote.te b/private/zygote.te
+index fe3228c76..32179e9d1 100644
+--- a/private/zygote.te
++++ b/private/zygote.te
+@@ -16,7 +16,7 @@ allow zygote self:global_capability_class_set setpcap;
+ # Switch SELinux context to app domains.
+ allow zygote self:process setcurrent;
+ allow zygote system_server:process dyntransition;
+-allow zygote appdomain:process dyntransition;
++allow zygote { appdomain -su }:process dyntransition;
+ allow zygote webview_zygote:process dyntransition;
+ allow zygote app_zygote:process dyntransition;
+ 
