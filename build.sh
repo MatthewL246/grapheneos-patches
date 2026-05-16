@@ -59,11 +59,11 @@ function update_patches {
     # This previously reset all of the repos and then applied all patches indiscriminately, but that method invalidated the incremental build cache!
 
     function apply_patch {
-        patch_file="$(realpath --no-symlinks "$0")"
+        patch_file="$(realpath --no-symlinks "$1")"
         # https://stackoverflow.com/a/28523143
         relative_patch_path="$(realpath --no-symlinks --relative-to ../patches "$patch_file")"
 
-        cd "$(dirname "$relative_patch_path")"
+        pushd "$(dirname "$relative_patch_path")" >/dev/null
 
         # https://stackoverflow.com/a/66755317
         if git apply --reverse --check "$patch_file" >/dev/null 2>&1; then
@@ -72,12 +72,14 @@ function update_patches {
             echo "Applying patch $relative_patch_path"
             git apply "$patch_file"
         fi
+
+        popd >/dev/null
     }
 
-    export -f apply_patch
-    # https://stackoverflow.com/a/4321522
-    find ../patches -type f -iname "*.patch" -exec bash -c 'apply_patch "$0"' {} \;
-    export -nf apply_patch
+    find ../patches -type f -iname "*.patch" -print0 |
+        while read -r -d $'\0' patch; do
+            apply_patch "$patch"
+        done
 }
 
 function run_build {
