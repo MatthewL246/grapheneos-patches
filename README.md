@@ -25,5 +25,7 @@ TODO: there are several disadvantages to using this, including not getting secur
 
 - [Official GrapheneOS build instructions](https://grapheneos.org/build)
 - [GrapheneOS releases](https://grapheneos.org/releases)
-- The [chenxiaolong/grapheneos-patches repo](https://github.com/chenxiaolong/grapheneos-patches), which provided me with some inspiration for this project (although I don't directly use any code from it)
-- [Hacker News comments from the GrapheneOS founder](https://news.ycombinator.com/threads?id=strcat) (unfortunately, I don't have specific links, but this is how I learned about the "ADB-only root" method, and I want to give credit where credit is due)
+- The [chriswoope/resign-android-image repo](https://github.com/chriswoope/resign-android-image), which provided me with some inspiration this project, information about the implications of signing my own GrapheneOS images, and ideas for patches (although I don't directly use any code from it, as it is based on modifying official OTA images instead of building them from source)
+- The [chenxiaolong/avbroot repo](https://github.com/chenxiaolong/avbroot), which is a similar project based on modifying official OTA images (it seems more polished than the previous repo but accomplishes root by installing Magisk, which is not what I am personally looking for)
+- The [chenxiaolong/grapheneos-patches repo](https://github.com/chenxiaolong/grapheneos-patches), which also provided me with some inspiration for this project and ideas for patches (although I don't directly use any of its patches)
+- [Hacker News comments from the GrapheneOS founder](https://news.ycombinator.com/threads?id=strcat) (unfortunately, I don't have specific links, but this is how I learned about the "ADB-only root" method and why GrapheneOS is explicitly against other forms of rooting, and I want to give credit where credit is due)
