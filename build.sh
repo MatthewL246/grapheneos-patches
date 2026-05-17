@@ -84,6 +84,7 @@ function update_patches {
 
 function run_build {
     target="$1"
+    skip_build="$2"
 
     # Android build system scripts reference undefined variables
     set +u
@@ -102,7 +103,9 @@ function run_build {
     set -u
 
     if [[ "$target" == "$emulator_target" ]]; then
-        m -j "$(nproc)"
+        if [[ "$skip_build" != true ]]; then
+            m -j "$(nproc)"
+        fi
         emulator
     elif [[ "$target" == "$phone_target" ]]; then
         m -j "$(nproc)" vendorbootimage vendorkernelbootimage target-files-package otatools-package
@@ -134,7 +137,7 @@ function main {
     if [[ $# -lt 1 || "$1" =~ ^-?-?h(elp)?$ ]]; then
         echo "Usage: $0 <target> [version]"
         echo
-        echo "<target> must be \"phone\" or \"emulator\"."
+        echo "<target> must be \"phone\", \"emulator\", or \"emulator-only\" (emulator but skips the rebuild)."
         echo "[version] may be the latest release tag name from https://grapheneos.org/releases#$phone_codename. If specified, the source code will be updated to that version, which will reset all local changes. Otherwise, no update will be performed."
 
         [[ $# -lt 1 ]] && exit 1 || exit 0
@@ -142,11 +145,15 @@ function main {
 
     target=""
     update_version=""
+    skip_build=false
 
     if [[ "$1" == phone ]]; then
         target="$phone_target"
-    elif [[ "$1" == emulator ]]; then
+    elif [[ "$1" == emulator || "$1" == emulator-only ]]; then
         target="$emulator_target"
+        if [[ "$1" == emulator-only ]]; then
+            skip_build=true
+        fi
     else
         echo "Invalid target provided."
         exit 1
@@ -166,7 +173,7 @@ function main {
 
     update_patches
 
-    run_build "$target"
+    run_build "$target" "$skip_build"
 }
 
 main "$@"
