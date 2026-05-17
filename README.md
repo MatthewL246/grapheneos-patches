@@ -2,6 +2,10 @@
 
 This repository contains build scripts and patches I use for my personal [GrapheneOS](https://grapheneos.org) builds.
 
+## Important note about installing for the first time
+
+The patch [`script/only-generate-ota-update-in-generate-release-script.patch`](./patches/script/only-generate-ota-update-in-generate-release-script.patch) deliberately prevents the release generation step from generating an install zip, which is used to install the OS on a device for the first time. Make sure to disable the patch (i.e. change the file extension to `.patch.disabled`) before running the build script for the first time. Then, after installing and relocking the bootloader, enable it again to save some time when generating updated releases.
+
 ## Goals
 
 - Build GrapheneOS from source and sign it with keys that I control. This allows me to make changes to the OS without unlocking the bootloader or wiping data.
