@@ -40,9 +40,9 @@ function update_source_code {
     git verify-tag "$(git describe)"
     cd ../..
 
-    # More than about 16 jobs results in rate limit errors
+    # More than about 8 jobs results in rate limit errors (16 seems to work but only when verifying that the code is already up-to-date)
     # Force options may result in loss of data, but all of that data should be saved as patches
-    repo sync --jobs 16 --force-sync --force-checkout --force-remove-dirty --prune --auto-gc
+    repo sync --jobs 8 --force-sync --force-checkout --force-remove-dirty --prune --auto-gc
 
     # These are read by envsetup.sh to set some metadata about the build date and time
     # For cleaner builds, it might be better to always delete these, but it adds a few minutes to incremental builds because some of the later targets (like partition images) need to be regenerated
@@ -102,13 +102,14 @@ function run_build {
     lunch "$target"
     set -u
 
+    # 16 jobs is an arbitrary number chosen to balance build speed and system responsiveness
     if [[ "$target" == "$emulator_target" ]]; then
         if [[ "$skip_build" != true ]]; then
-            m -j "$(nproc)"
+            m -j 16
         fi
         emulator
     elif [[ "$target" == "$phone_target" ]]; then
-        m -j "$(nproc)" vendorbootimage vendorkernelbootimage target-files-package otatools-package
+        m -j 16 vendorbootimage vendorkernelbootimage target-files-package otatools-package
 
         read -r -p "Build completed, continue generating a signed release? (y/N) " response
         if [[ "$response" == y || "$response" == Y ]]; then
