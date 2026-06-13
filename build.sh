@@ -85,14 +85,15 @@ function update_patches {
 function run_build {
     target="$1"
     skip_build="$2"
+    adevtool_update_needed="$3"
 
     # Android build system scripts reference undefined variables
     set +u
     source ./build/envsetup.sh
     set -u
 
-    # Directory name will need to change when new releases update the vendor firmware version
-    if [[ "$target" == "$phone_target" && ! -d "./vendor/adevtool/dl/unpacked/$phone_codename-CP1A.260505.005" ]]; then
+    # Updating the source code without re-running adevtool seems to always (?) result in a "vendor module is outdated" error
+    if [[ "$target" == "$phone_target" && "$adevtool_update_needed" == true ]]; then
         yarn --cwd ./vendor/adevtool install --immutable --ignore-scripts
         # This invalidates a few parts of the incremental build cache (about 3-4 minutes to rebuild)
         ./vendor/adevtool/bin/run generate-all --devices "$phone_codename"
@@ -147,6 +148,7 @@ function main {
     target=""
     update_version=""
     skip_build=false
+    adevtool_update_needed=false
 
     if [[ "$1" == phone ]]; then
         target="$phone_target"
@@ -162,6 +164,7 @@ function main {
 
     if [[ -n "${2:-}" ]]; then
         update_version="$2"
+        adevtool_update_needed=true
     fi
 
     check_build_dependencies "$target"
@@ -174,7 +177,7 @@ function main {
 
     update_patches
 
-    run_build "$target" "$skip_build"
+    run_build "$target" "$skip_build" "$adevtool_update_needed"
 }
 
 main "$@"
